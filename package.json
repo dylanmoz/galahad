@@ -1,0 +1,82 @@
+{
+  "name": "galahad",
+  "version": "0.1.0",
+  "description": "It's a data table, made in react.",
+  "main": "lib/index.js",
+  "scripts": {
+    "docs:publish": "cd docs && gatsby build --prefix-paths && gh-pages -d public && cd ..",
+    "build": "rimraf lib && babel src -d lib --ignore .spec.js && flow-copy-source -v src lib",
+    "test": "yarn lint && yarn flow && yarn jest",
+    "lint": "eslint src docs/src --ignore-pattern '**/*.test.js' --ext .js",
+    "flow": "flow check --show-all-errors",
+    "jest": "jest",
+    "jest:update": "jest -u"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dylanmoz/galahad.git"
+  },
+  "keywords": [
+    "columns",
+    "table",
+    "grid",
+    "react"
+  ],
+  "author": "Dylan Mozlowski <dylan.mozlowski@gmail.com> (http://dylanmoz.github.io)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dylanmoz/galahad/issues"
+  },
+  "homepage": "https://github.com/dylanmoz/galahad#readme",
+  "devDependencies": {
+    "@classy/classy-components": "0.12.20",
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-eslint": "^7.2.3",
+    "babel-jest": "^20.0.3",
+    "babel-plugin-glamorous-displayname": "^2.1.0",
+    "babel-plugin-module-resolver": "^2.7.1",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-plugin-transform-react-constant-elements": "^6.23.0",
+    "babel-plugin-transform-react-inline-elements": "^6.22.0",
+    "babel-preset-env": "^1.6.0",
+    "babel-preset-flow": "^6.23.0",
+    "babel-preset-react": "^6.24.1",
+    "eslint": "^4.6.0",
+    "eslint-config-airbnb": "^15.1.0",
+    "eslint-plugin-flowtype": "^2.35.1",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-jsx-a11y": "^5.1.1",
+    "eslint-plugin-react": "^7.3.0",
+    "flow-bin": "^0.60.1",
+    "flow-copy-source": "^1.2.1",
+    "glamor": "^2.20.40",
+    "glamorous": "^4.7.0",
+    "jest": "^20.0.4",
+    "react": "^16.0.0",
+    "react-dom": "^16.0.0",
+    "rimraf": "^2.6.1"
+  },
+  "jest": {
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/*.spec.js"
+    ],
+    "moduleDirectories": [
+      "src",
+      "node_modules"
+    ],
+    "roots": [
+      "src/"
+    ]
+  },
+  "dependencies": {
+    "react": "^16.0.0",
+    "react-dom": "^16.0.0",
+    "classnames": "^2.2.5",
+    "lodash": "^4.17.4",
+    "moize": "^4.0.3",
+    "react-motion": "^0.5.2"
+  }
+}
