@@ -62,6 +62,8 @@ class Galahad extends React.Component<Props, State> {
   }
 
   componentDidMount() {
+    window.addEventListener('touchmove', this.handleTouchMove)
+    window.addEventListener('touchend', this.handleTouchEnd)
     window.addEventListener('mousemove', this.handleMouseMove)
     window.addEventListener('mouseup', this.handleMouseUp)
   }
@@ -73,6 +75,8 @@ class Galahad extends React.Component<Props, State> {
   }
 
   componentWillUnmount() {
+    window.removeEventListener('touchmove', this.handleTouchMove)
+    window.removeEventListener('touchend', this.handleTouchEnd)
     window.removeEventListener('mousemove', this.handleMouseMove)
     window.removeEventListener('mouseup', this.handleMouseUp)
   }
@@ -132,6 +136,10 @@ class Galahad extends React.Component<Props, State> {
     }
   }
 
+  handleTouchEnd = () => {
+    this.handleMouseUp()
+  }
+
   handleMouseUp = () => {
     const { selectedColumn, isDragging } = this.state
 
@@ -146,14 +154,22 @@ class Galahad extends React.Component<Props, State> {
     })
   }
 
+  handleTouchStart = (column, columnX) => (e) => {
+    this.handleMouseDown(column, columnX)(e.touches[0])
+  }
+
   handleMouseDown = (column, columnX) => (e) => {
-    if (e.button !== 0) return
+    if (e.button !== 0 && !(e instanceof Touch)) return
 
     this.setState({
       selectedColumn: column,
       mouseX: columnX,
       deltaX: e.pageX - columnX
     })
+  }
+
+  handleTouchMove = (e) => {
+    this.handleMouseMove(e.touches[0])
   }
 
   handleMouseMove = ({ pageX }) => {
@@ -351,6 +367,7 @@ class Galahad extends React.Component<Props, State> {
                   >
                     <HeaderCell
                       isDraggable={this.isDraggable(column)}
+                      onTouchStart={this.handleTouchStart(column, x)}
                       onMouseDown={this.handleMouseDown(column, x)}
                     >
                       <RenderHeader self={column} />
