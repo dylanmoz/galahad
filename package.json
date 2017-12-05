@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "docs:publish": "cd docs && gatsby build --prefix-paths && gh-pages -d public && cd ..",
-    "build": "rimraf lib && babel src -d lib --ignore .spec.js && flow-copy-source -v src lib",
+    "build": "rimraf lib && babel src -d lib --ignore .spec.js && flow-copy-source -v src lib && node-sass -o lib src/styles.scss",
     "test": "yarn lint && yarn flow && yarn jest",
     "lint": "eslint src docs/src --ignore-pattern '**/*.test.js' --ext .js",
     "flow": "flow check --show-all-errors",

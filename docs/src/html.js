@@ -4,8 +4,27 @@ import React from 'react'
 
 const prefix = process.env.NODE_ENV === 'production' ? '/galahad' : ''
 
+let stylesStr
+if (process.env.NODE_ENV === 'production') {
+  try {
+    stylesStr = require('!raw-loader!../public/styles.css')
+  } catch (e) {
+    console.log(e)
+  }
+}
+
 module.exports = class HTML extends React.Component {
   render() {
+    let css
+    if (process.env.NODE_ENV === `production`) {
+      css = (
+        <style
+          id="gatsby-inlined-css"
+          dangerouslySetInnerHTML={{ __html: stylesStr }}
+        />
+      )
+    }
+
     return (
       <html>
         <head>
@@ -17,6 +36,7 @@ module.exports = class HTML extends React.Component {
           <link rel="stylesheet" href={`${prefix}/skeleton.css`} />
           <link rel="stylesheet" href={`${prefix}/main.css`} />
           {this.props.headComponents}
+          {css}
         </head>
         <body>
           {this.props.preBodyComponents}

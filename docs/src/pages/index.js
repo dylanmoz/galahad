@@ -127,7 +127,11 @@ class IndexPage extends React.Component<any> {
                   <Col span={1}>
                     <div style={{ marginBottom: 36 }}>
                       <h5>Install</h5>
-                      <Code>{'yarn add galahad'}</Code>
+                      <Code>
+                        {`yarn add galahad
+// Include galahad/lib/styles.css
+`}
+                      </Code>
                     </div>
 
                     <div style={{ marginBottom: 36 }}>
