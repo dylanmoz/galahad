@@ -361,7 +361,7 @@ class Galahad extends React.Component<Props, State> {
                     isSelected={isSelected}
                     style={{
                       width: `${width}px`,
-                      transform: `translate3d(${x}px, 0, 0) scale(${1 + (selected * 0.05)})`,
+                      transform: `translate3d(${Math.floor(x)}px, 0, 0) scale(${1 + (selected * 0.05)})`,
                       boxShadow: `0 ${selected * 16}px ${selected * 24}px 0 rgba(25, 29, 34, ${selected * 0.1})`,
                     }}
                   >
