@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "docs:publish": "cd docs && gatsby build --prefix-paths && gh-pages -d public && cd ..",
-    "build": "rimraf lib && babel src -d lib --ignore .spec.js && flow-copy-source -v src lib && node-sass -o lib src/styles.scss",
+    "build": "rimraf lib && babel src -d lib --ignore .spec.js && flow-copy-source -v src lib && node-sass src/styles.scss | postcss --use autoprefixer -o lib/styles.css",
     "test": "yarn lint && yarn flow && yarn jest",
     "lint": "eslint src docs/src --ignore-pattern '**/*.test.js' --ext .js",
     "flow": "flow check --show-all-errors",
@@ -29,6 +29,7 @@
   },
   "homepage": "https://github.com/dylanmoz/galahad#readme",
   "devDependencies": {
+    "autoprefixer": "^7.2.1",
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.0",
     "babel-eslint": "^7.2.3",
@@ -54,6 +55,7 @@
     "glamor": "^2.20.40",
     "jest": "^20.0.4",
     "node-sass": "^4.7.2",
+    "postcss-cli": "^4.1.1",
     "react": "^16.0.0",
     "react-dom": "^16.0.0",
     "rimraf": "^2.6.1"
