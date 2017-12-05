@@ -12,6 +12,7 @@
     "flowtype"
   ],
   "rules": {
+    "space-infix-ops": 0,
     "react/prop-types": 1,
     "react/require-default-props": 0,
     "import/no-extraneous-dependencies": [2, { "devDependencies": true }],

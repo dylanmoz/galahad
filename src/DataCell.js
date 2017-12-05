@@ -7,15 +7,17 @@ import classnames from 'classnames'
 type Props = {
   isExpanded: boolean,
   hovering?: boolean,
+  isLastRow?: boolean,
   className?: string
 }
 
-const DataCell = ({ isExpanded, hovering, className, ...others }: Props) => (
+const DataCell = ({ isExpanded, hovering, isLastRow, className, ...others }: Props) => (
   <div
     className={classnames(
       'data-cell',
       {
         expanded: isExpanded,
+        'last-row': isLastRow,
         hovering
       },
       className

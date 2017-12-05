@@ -5,7 +5,6 @@ import type { ComponentType } from 'react'
 import classnames from 'classnames'
 import { Motion, spring } from 'react-motion'
 import { range, keyBy, throttle } from 'lodash'
-import { Row, Card, TextPlaceloader } from '@classy/classy-components'
 
 import moveArrayElement from './utils/moveArrayElement'
 import withParentSize from './utils/withParentSize'
@@ -15,28 +14,12 @@ import getColumnWidth from './utils/getColumnWidth'
 import DataCell from './DataCell'
 import HeaderCell from './HeaderCell'
 import DataColumn from './DataColumn'
+import Placeloader from './Placeloader'
+import type { DataColumnDefinition } from './types'
+
+const springConfig = { stiffness: 300, damping: 50 }
 
 type TableData = any[]
-
-type DataColumnProps<T> = {
-  entity: T,
-  self: DataColumnDefinition
-}
-
-type DataColumnDefinition = {
-  id: string,
-  expanded?: boolean,
-  group?: 'left' | 'right',
-  label?: Node,
-  linkable?: boolean,
-  renderHeader: ComponentType<{ self: DataColumnDefinition }>,
-  render: ComponentType<DataColumnProps<*>>,
-  renderHover?: ComponentType<DataColumnProps<*>>,
-  renderLoading?: ComponentType<DataColumnProps<*>>,
-  spanPercent: number,
-  spanFixed: number,
-  textAlign?: 'left' | 'right'
-}
 
 type Props = {
   tableData: ?TableData,
@@ -45,6 +28,7 @@ type Props = {
   fixedWidth: boolean,
   onColumnChange: (selectedColumns: Array<string>) => void,
   loading: boolean,
+  numLoadingRows?: number,
   onHeaderClick: (column: DataColumnDefinition) => void,
   parentWidth: number,
   parentHeight: number,
@@ -80,6 +64,12 @@ class Galahad extends React.Component<Props, State> {
   componentDidMount() {
     window.addEventListener('mousemove', this.handleMouseMove)
     window.addEventListener('mouseup', this.handleMouseUp)
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (this.props.columns !== nextProps.columns) {
+      this.setState({ columnMap: keyBy(nextProps.columns, 'id') })
+    }
   }
 
   componentWillUnmount() {
@@ -235,18 +225,20 @@ class Galahad extends React.Component<Props, State> {
       isExpanded: boolean,
       loading: boolean,
       hoverId: boolean
-    ) => (
-      (loading ? range(10) : tableData).map((item) => {
+    ) => {
+      const list = (loading ? range(this.props.numLoadingRows || 10) : tableData)
+
+      return list.map((item, i) => {
         if (loading) {
           return (
             <DataCell
               key={`${item}-${column.id}`}
               isExpanded={isExpanded}
+              isLastRow={i === list.length - 1}
             >
               {column.renderLoading ? <column.renderLoading key={item} self={column} /> : (
-                <TextPlaceloader
+                <Placeloader
                   key={item}
-                  text="body1"
                   w="60px"
                   style={{ float: column.textAlign || 'left' }}
                 />
@@ -263,17 +255,19 @@ class Galahad extends React.Component<Props, State> {
 
         return (
           <DataCell
-            key={`${item.id}-${column.id}`}
+            key={`${column.id}-${i}`} // eslint-disable-line react/no-array-index-key
             onMouseEnter={this.handleMouseEnter(item.id)}
             onMouseLeave={this.handleMouseLeave}
             isExpanded={isExpanded}
             hovering={hovering}
+            isLastRow={i === list.length - 1}
+            style={{ textAlign: column.textAlign || 'left' }}
           >
             <ColumnRender entity={item} self={column} />
           </DataCell>
         )
       })
-    ),
+    },
     { maxSize: 50 }
   )
 
@@ -289,6 +283,7 @@ class Galahad extends React.Component<Props, State> {
       parentWidth,
       parentHeight,
       className,
+      numLoadingRows,
       ...others
     } = this.props
 
@@ -300,6 +295,7 @@ class Galahad extends React.Component<Props, State> {
     const rowHeight = isExpanded ? 84 : 60
 
     const data = tableData || []
+    const numRows = numLoadingRows || 10
 
     return (
       <div
@@ -311,7 +307,13 @@ class Galahad extends React.Component<Props, State> {
         ref={this.setTableRef}
         {...others}
       >
-        <Row style={{ height: `${42 + (rowHeight * (loading ? 10 : data.length))}px` }}>
+        <div
+          style={{
+            display: 'flex',
+            margin: '0 -12px',
+            height: `${42 + (rowHeight * (loading ? numRows : data.length))}px`
+          }}
+        >
           {orderedIds.map((columnId) => {
             const column = columnMap[columnId]
 
@@ -322,8 +324,8 @@ class Galahad extends React.Component<Props, State> {
             )
 
             const style = {
-              selected: spring(isSelected ? 1 : 0),
-              x: isSelected ? mouseX : spring(runningX),
+              selected: spring(isSelected ? 1 : 0, springConfig),
+              x: isSelected ? mouseX : spring(runningX, springConfig),
             }
 
             const width = getColumnWidth(column, this.getWidth(), fixedWidth)
@@ -368,7 +370,7 @@ class Galahad extends React.Component<Props, State> {
               </Motion>
             )
           })}
-        </Row>
+        </div>
       </div>
     )
   }

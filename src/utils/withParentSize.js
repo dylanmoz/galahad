@@ -58,6 +58,7 @@ function withParentSize(BaseComponent: ComponentType<any>) {
     }, this.props.windowResizeDebounceTime)
 
     render() {
+      const { windowResizeDebounceTime, ...others } = this.props
       const { parentWidth, parentHeight } = this.state
 
       return (
@@ -69,7 +70,7 @@ function withParentSize(BaseComponent: ComponentType<any>) {
             <BaseComponent
               parentWidth={parentWidth}
               parentHeight={parentHeight}
-              {...this.props}
+              {...others}
             />
           )}
         </div>
