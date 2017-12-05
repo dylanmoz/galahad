@@ -68,7 +68,7 @@ class IndexPage extends React.Component<any> {
                         style={{ float: 'right' }}
                         type="stargazers"
                         namespace="dylanmoz"
-                        repo="<repo>"
+                        repo="galahad"
                       />
                     </Col>
                   </Row>

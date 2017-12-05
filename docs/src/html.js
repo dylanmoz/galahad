@@ -2,7 +2,7 @@
 
 import React from 'react'
 
-const prefix = process.env.NODE_ENV === 'production' ? '/<repo>' : ''
+const prefix = process.env.NODE_ENV === 'production' ? '/galahad' : ''
 
 module.exports = class HTML extends React.Component {
   render() {
