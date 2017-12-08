@@ -40,5 +40,5 @@ function getColumnGroups(
   }
 }
 
-export default getColumnGroups
-// export default cache(getColumnGroups, { maxSize: 25 })
+// export default getColumnGroups
+export default cache(getColumnGroups, { maxSize: 25 })

@@ -52,10 +52,6 @@ const data = [
   { house: 'Targaryen', region: 'Crownlands', capital: 'Dragonstone', banner: 'https://vignette.wikia.nocookie.net/gameofthrones/images/1/16/House-Targaryen-heraldry.jpg/revision/latest/scale-to-width-down/185?cb=20151004105028' }
 ]
 
-type State = {
-  columnOrder: string[]
-}
-
 // eslint-disable-next-line
 export default class MainDemo extends React.Component<any> {
   render() {
@@ -71,11 +67,39 @@ export default class MainDemo extends React.Component<any> {
 export const code = `
 import Galahad from 'galahad'
 
+const data = [
+  { house: 'Arryn', region: 'Vale of Arryn', capital: 'Eyrie', banner: '...' },
+  { house: 'Frey', region: 'The Riverlands', capital: 'Riverrun', banner: '...' },
+  { house: 'Greyjoy', region: 'The Iron Islands', capital: 'Pyke', banner: '...' },
+  { house: 'Lannister', region: 'Westerlands', capital: 'Casterly Rock', banner: '...' },
+  { house: 'Stark', region: 'The North', capital: 'Winterfell', banner: '...' },
+  { house: 'Targaryen', region: 'Crownlands', capital: 'Dragonstone', banner: '...' }
+]
+
+const definitions = [
+  {
+    id: 'house',
+    renderHeader: ({ self }) => _.uppercase(self.id),
+    render: ({ entity, self }) => entity[self.id],
+    spanPercent: 1/4
+  },
+  { id: 'region', renderHeader: ..., render: ..., spanPercent: 1/4 },
+  { id: 'capital', renderHeader: ..., render: ..., spanPercent: 1/4 },
+  {
+    id: 'banner',
+    renderHeader: ...,
+    render: ({ entity }) => <Image url={entity.banner} />,
+    spanPercent: 1/4,
+    noSort: true
+  }
+]
+
 class Demo extends React.Component {
   constructor(props) {
     super(props)
 
     this.state = {
+      sortBy: { field: 'house', order: 'ASC' },
       columnOrder: ['house', 'region', 'capital', 'banner']
     }
   }
@@ -84,16 +108,28 @@ class Demo extends React.Component {
     this.setState({ columnOrder })
   }
 
-  handleHeaderClick = () => {
-    console.log('header click')
+  handleHeaderClick = (column) => {
+    const { sortBy } = this.state
+
+    this.setState({
+      sortBy: {
+        field: column.id,
+        order: column.id === sortBy.field && sortBy.order === 'ASC' ? 'DESC' : 'ASC'
+      }
+    })
   }
 
   render() {
+    const { sortBy } = this.state
+    const sortedData = data.sort(
+      (a, b) => (a[sortBy.field] < b[sortBy.field] ^ sortBy.order === 'ASC') === 0 ? -1 : 1)
+    )
+
     return (
       <Galahad
         loading={false}
         numLoadingRows={5}
-        tableData={data}
+        tableData={sortedData}
         columns={definitions}
         selectedColumns={this.state.columnOrder}
         onColumnChange={this.handleColumnChange}

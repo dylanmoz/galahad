@@ -44,6 +44,7 @@ export default class Table extends React.Component<any, State> {
   }
 
   handleColumnChange = (columnOrder) => {
+    console.log('column change')
     this.setState({ columnOrder })
   }
 
@@ -68,14 +69,9 @@ export default class Table extends React.Component<any, State> {
       expanded: !!column.expanded
     }))
 
-    const sortedData = data.sort((a, b) => {
-      const colA = a[sortBy.id]
-      const colB = b[sortBy.id]
-
-      const result = colA < colB ? 1 : -1
-
-      return sortBy.order === 'ASC' ? -result : result
-    })
+    const sortedData = data.sort((a, b) => (
+      ((a[sortBy.id] < b[sortBy.id] ^ sortBy.order === 'ASC') === 0 ? -1 : 1))
+    )
 
     return (
       <Galahad

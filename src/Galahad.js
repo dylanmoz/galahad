@@ -17,7 +17,7 @@ import DataColumn from './DataColumn'
 import Placeloader from './Placeloader'
 import type { DataColumnDefinition } from './types'
 
-const springConfig = { stiffness: 300, damping: 50 }
+const springConfig = { stiffness: 170, damping: 26 }
 
 type TableData = any[]
 
@@ -38,6 +38,7 @@ type Props = {
 type State = {
   hoverId: ?string,
   selectedColumn: ?DataColumnDefinition,
+  orderedIds: string[],
   deltaX: number,
   mouseX: number,
   isDragging: boolean,
@@ -51,13 +52,18 @@ class Galahad extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props)
 
+    const { selectedColumns, fixedWidth } = this.props
+    const columnMap = keyBy(this.props.columns, 'id')
+    const columnGroups = getColumnGroups(selectedColumns, columnMap, this.getWidth(), fixedWidth)
+
     this.state = {
       hoverId: null,
       selectedColumn: null,
+      orderedIds: columnGroups.orderedIds,
       deltaX: 0,
       mouseX: 0,
       isDragging: false,
-      columnMap: keyBy(this.props.columns, 'id')
+      columnMap
     }
   }
 
@@ -97,10 +103,10 @@ class Galahad extends React.Component<Props, State> {
   getWidth = () => this.props.parentWidth - 24
 
   getColumnGroups = () => {
-    const { selectedColumns, fixedWidth } = this.props
-    const { columnMap } = this.state
+    const { fixedWidth } = this.props
+    const { orderedIds, columnMap } = this.state
 
-    return getColumnGroups(selectedColumns, columnMap, this.getWidth(), fixedWidth)
+    return getColumnGroups(orderedIds, columnMap, this.getWidth(), fixedWidth)
   }
 
   isExpanded = cache(
@@ -141,10 +147,15 @@ class Galahad extends React.Component<Props, State> {
   }
 
   handleMouseUp = () => {
-    const { selectedColumn, isDragging } = this.state
+    const { selectedColumns } = this.props
+    const { orderedIds, selectedColumn, isDragging } = this.state
 
     if (selectedColumn && !isDragging) {
       this.props.onHeaderClick(selectedColumn)
+    }
+
+    if (!orderedIds.every((id, i) => id === selectedColumns[i])) {
+      this.props.onColumnChange(orderedIds)
     }
 
     this.setState({
@@ -229,9 +240,9 @@ class Galahad extends React.Component<Props, State> {
   }
 
   transition = throttle((from: any, to: any) => {
-    this.props.onColumnChange(
-      moveArrayElement(this.getColumnGroups().orderedIds, from, to)
-    )
+    this.setState({
+      orderedIds: moveArrayElement(this.getColumnGroups().orderedIds, from, to)
+    })
   }, 500, { leading: true, trailing: false })
 
   renderColumnData = cache(
