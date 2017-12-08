@@ -19,7 +19,7 @@ import type { DataColumnDefinition } from './types'
 
 const springConfig = { stiffness: 170, damping: 26 }
 
-type TableData = any[]
+type TableData = Array<{}>
 
 type Props = {
   tableData: ?TableData,
@@ -36,7 +36,7 @@ type Props = {
 }
 
 type State = {
-  hoverId: ?string,
+  hoverRowIndex: ?string,
   selectedColumn: ?DataColumnDefinition,
   orderedIds: string[],
   deltaX: number,
@@ -57,7 +57,7 @@ class Galahad extends React.Component<Props, State> {
     const columnGroups = getColumnGroups(selectedColumns, columnMap, this.getWidth(), fixedWidth)
 
     this.state = {
-      hoverId: null,
+      hoverRowIndex: null,
       selectedColumn: null,
       orderedIds: columnGroups.orderedIds,
       deltaX: 0,
@@ -117,8 +117,8 @@ class Galahad extends React.Component<Props, State> {
   )
 
   handleMouseEnter = cache(
-    (hoverId: string) => () => {
-      this.handleHover(hoverId)
+    (hoverRowIndex: string) => () => {
+      this.handleHover(hoverRowIndex)
     },
     { maxSize: 50 }
   )
@@ -127,18 +127,19 @@ class Galahad extends React.Component<Props, State> {
     this.handleHover(null)
   }
 
-  handleHover = (hoverId: ?string) => {
-    if (hoverId) {
-      // The hoverId is trying to be set, clear any attempts to remove the hoverId and set the id
+  handleHover = (hoverRowIndex: ?string) => {
+    if (hoverRowIndex !== null) {
+      // The hoverRowIndex is trying to be set,
+      // clear any attempts to remove the hoverRowIndex and set the index
       clearTimeout(this.hoverTimeout)
 
-      if (this.state.hoverId !== hoverId) {
-        this.setState({ hoverId })
+      if (this.state.hoverRowIndex !== hoverRowIndex) {
+        this.setState({ hoverRowIndex })
       }
     } else {
-      // The hoverId is trying to be cleared. However, we may immediately receive a mouseEnter
+      // The hoverRowIndex is trying to be cleared. However, we may immediately receive a mouseEnter
       // event, so we need to hold off for a few milliseconds before clearing.
-      this.hoverTimeout = setTimeout(() => this.setState({ hoverId: null }), 10)
+      this.hoverTimeout = setTimeout(() => this.setState({ hoverRowIndex: null }), 10)
     }
   }
 
@@ -251,21 +252,23 @@ class Galahad extends React.Component<Props, State> {
       tableData: TableData,
       isExpanded: boolean,
       loading: boolean,
-      hoverId: boolean
+      hoverRowIndex: boolean
     ) => {
       const list = (loading ? range(this.props.numLoadingRows || 10) : tableData)
 
       return list.map((item, i) => {
+        const renderKey = `${column.id}-${i}`
+
         if (loading) {
           return (
             <DataCell
-              key={`${item}-${column.id}`}
+              key={`cell-${i}-${column.id}`} // eslint-disable-line react/no-array-index-key
               isExpanded={isExpanded}
               isLastRow={i === list.length - 1}
             >
-              {column.renderLoading ? <column.renderLoading key={item} self={column} /> : (
+              {column.renderLoading ? <column.renderLoading key={renderKey} self={column} /> : (
                 <Placeloader
-                  key={item}
+                  key={renderKey}
                   w="60px"
                   style={{ float: column.textAlign || 'left' }}
                 />
@@ -274,7 +277,7 @@ class Galahad extends React.Component<Props, State> {
           )
         }
 
-        const hovering = item.id === hoverId
+        const hovering = (i === hoverRowIndex)
 
         const ColumnRender = hovering && column.renderHover ?
           column.renderHover
@@ -283,7 +286,7 @@ class Galahad extends React.Component<Props, State> {
         return (
           <DataCell
             key={`${column.id}-${i}`} // eslint-disable-line react/no-array-index-key
-            onMouseEnter={this.handleMouseEnter(item.id)}
+            onMouseEnter={this.handleMouseEnter(i)}
             onMouseLeave={this.handleMouseLeave}
             isExpanded={isExpanded}
             hovering={hovering}
@@ -314,7 +317,7 @@ class Galahad extends React.Component<Props, State> {
       ...others
     } = this.props
 
-    const { selectedColumn, columnMap, hoverId, isDragging, mouseX } = this.state
+    const { selectedColumn, columnMap, hoverRowIndex, isDragging, mouseX } = this.state
 
     let runningX = 0
     const { orderedIds, groups } = this.getColumnGroups()
@@ -389,9 +392,7 @@ class Galahad extends React.Component<Props, State> {
                       data,
                       isExpanded,
                       loading,
-                      isDragging ? null : hoverId,
-                      isLastLeftColumn,
-                      false
+                      isDragging ? null : hoverRowIndex
                     )}
                   </DataColumn>
                 )}
