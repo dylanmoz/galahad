@@ -5,6 +5,7 @@ import type { ComponentType } from 'react'
 import classnames from 'classnames'
 import { Motion, spring } from 'react-motion'
 import { range, keyBy, throttle } from 'lodash'
+import { Scrollbars } from 'react-custom-scrollbars'
 
 import moveArrayElement from './utils/moveArrayElement'
 import withParentSize from './utils/withParentSize'
@@ -39,13 +40,15 @@ type State = {
   hoverRowIndex: ?string,
   selectedColumn: ?DataColumnDefinition,
   orderedIds: string[],
-  deltaX: number,
-  mouseX: number,
+  mouseXFromTable: number,
+  mouseXFromColumn: number,
   isDragging: boolean,
   columnMap: { [key: string]: DataColumnDefinition }
 }
 
 class Galahad extends React.Component<Props, State> {
+  table: ?HTMLDivElement
+  scrollbars: ?Object
   tableRect: ?{ top: number, left: number, width: number, height: number }
   hoverTimeout: ?number
 
@@ -60,8 +63,8 @@ class Galahad extends React.Component<Props, State> {
       hoverRowIndex: null,
       selectedColumn: null,
       orderedIds: columnGroups.orderedIds,
-      deltaX: 0,
-      mouseX: 0,
+      mouseXFromTable: 0,
+      mouseXFromColumn: 0,
       isDragging: false,
       columnMap
     }
@@ -88,7 +91,12 @@ class Galahad extends React.Component<Props, State> {
   }
 
   setTableRef = (ref: ?HTMLDivElement) => {
+    this.table = ref
     this.tableRect = ref ? ref.getBoundingClientRect() : null
+  }
+
+  setScrollbarsRef = (ref: ?Object) => {
+    this.scrollbars = ref
   }
 
   isDraggable = (column: DataColumnDefinition) => {
@@ -100,7 +108,7 @@ class Galahad extends React.Component<Props, State> {
     return !notDraggable
   }
 
-  getWidth = () => this.props.parentWidth - 24
+  getWidth = () => this.props.parentWidth
 
   getColumnGroups = () => {
     const { fixedWidth } = this.props
@@ -161,7 +169,7 @@ class Galahad extends React.Component<Props, State> {
 
     this.setState({
       selectedColumn: null,
-      deltaX: 0,
+      mouseXFromColumn: 0,
       isDragging: false
     })
   }
@@ -170,13 +178,16 @@ class Galahad extends React.Component<Props, State> {
     this.handleMouseDown(column, columnX)(e.touches[0])
   }
 
-  handleMouseDown = (column, columnX) => (e) => {
+  handleMouseDown = (column, columnOffsetX) => (e) => {
     if (e.button !== 0 && !(e instanceof Touch)) return
+    if (!this.tableRect || !this.scrollbars) return
+
+    const scrollLeft = this.scrollbars.getScrollLeft()
 
     this.setState({
       selectedColumn: column,
-      mouseX: columnX,
-      deltaX: e.pageX - columnX
+      mouseXFromTable: e.pageX - this.tableRect.left,
+      mouseXFromColumn: (e.pageX - this.tableRect.left - columnOffsetX) + scrollLeft
     })
   }
 
@@ -184,17 +195,49 @@ class Galahad extends React.Component<Props, State> {
     this.handleMouseMove(e.touches[0])
   }
 
+  scroll = (scrollLeft: boolean) => {
+    if (scrollLeft) {
+      this.scrollLeft()
+    } else {
+      this.scrollRight()
+    }
+  }
+
+  scrollLeft = () => {
+    const { selectedColumn } = this.state
+
+    if (!selectedColumn || !this.scrollbars) return
+
+    this.scrollbars.scrollLeft(this.scrollbars.getScrollLeft() - 1)
+
+    requestAnimationFrame(this.scrollLeft)
+  }
+
+  scrollRight = () => {
+    const { selectedColumn } = this.state
+
+    if (!selectedColumn || !this.scrollbars) return
+
+    this.scrollbars.scrollLeft(this.scrollbars.getScrollLeft() + 1)
+
+    requestAnimationFrame(this.scrollRight)
+  }
+
   handleMouseMove = ({ pageX }) => {
     const { fixedWidth } = this.props
-    const { selectedColumn, deltaX, columnMap } = this.state
+    const { selectedColumn, columnMap } = this.state
 
-    if (!selectedColumn || !this.tableRect) return
+    if (!selectedColumn || !this.tableRect || !this.scrollbars) return
 
     let runningX = 0
-    const mouseX = pageX - deltaX
-    const mousePos = pageX - this.tableRect.left
+    const mouseXFromTable = pageX - this.tableRect.left + this.scrollbars.getScrollLeft() // Pixel offset from the left side of table
 
-    if (pageX < this.tableRect.left || pageX > this.tableRect.left + this.tableRect.width) return
+    const leftOfTable = pageX < this.tableRect.left
+    const rightOfTable = pageX > this.tableRect.left + this.tableRect.width
+    if (leftOfTable || rightOfTable) {
+      this.scroll(leftOfTable)
+      return
+    }
     if (!this.isDraggable(selectedColumn)) return
 
     const {
@@ -205,10 +248,11 @@ class Galahad extends React.Component<Props, State> {
 
     const { group } = selectedColumn
 
-    if (group === 'left' && mousePos > centerLeft) return
-    if (group === 'right' && mousePos < centerRight) return
-    if (!group && (mousePos < centerLeft || mousePos > centerRight)) return
+    if (group === 'left' && mouseXFromTable > centerLeft) return
+    if (group === 'right' && mouseXFromTable < centerRight) return
+    if (!group && (mouseXFromTable < centerLeft || mouseXFromTable > centerRight)) return
 
+    // Find what index the selected column should be
     const columnIndex = range(0, orderedIds.length).find((i) => {
       const currentColumn = columnMap[orderedIds[i]]
       const width = getColumnWidth(currentColumn, this.getWidth(), fixedWidth)
@@ -216,14 +260,14 @@ class Galahad extends React.Component<Props, State> {
       runningX += width
 
       if (i === 0) {
-        return mousePos < width
+        return mouseXFromTable < width
       }
 
       if (i === orderedIds.length - 1) {
         return true
       }
 
-      return mousePos > currentRunningX && mousePos < runningX
+      return mouseXFromTable > currentRunningX && mouseXFromTable < runningX
     })
 
     const currentIndex = range(0, orderedIds.length).find(i => (
@@ -231,7 +275,7 @@ class Galahad extends React.Component<Props, State> {
     ))
 
     this.setState({
-      mouseX,
+      mouseXFromTable,
       isDragging: true
     })
 
@@ -248,7 +292,7 @@ class Galahad extends React.Component<Props, State> {
 
   renderColumnData = cache(
     (
-      column: any,
+      column: DataColumnDefinition,
       tableData: TableData,
       isExpanded: boolean,
       loading: boolean,
@@ -301,6 +345,19 @@ class Galahad extends React.Component<Props, State> {
     { maxSize: 50 }
   )
 
+  getScrollWidth = cache(
+    (orderedIds, columnMap, fixedWidth) => (
+      orderedIds.reduce((sum, columnId) => {
+        const column = columnMap[columnId]
+
+        const width = getColumnWidth(column, this.getWidth(), fixedWidth)
+
+        return sum + width
+      }, 0)
+    ),
+    { maxSize: 25 }
+  )
+
   render() {
     const {
       tableData,
@@ -317,7 +374,14 @@ class Galahad extends React.Component<Props, State> {
       ...others
     } = this.props
 
-    const { selectedColumn, columnMap, hoverRowIndex, isDragging, mouseX } = this.state
+    const {
+      selectedColumn,
+      columnMap,
+      hoverRowIndex,
+      isDragging,
+      mouseXFromTable,
+      mouseXFromColumn
+    } = this.state
 
     let runningX = 0
     const { orderedIds, groups } = this.getColumnGroups()
@@ -327,80 +391,88 @@ class Galahad extends React.Component<Props, State> {
     const data = tableData || []
     const numRows = numLoadingRows || 10
 
+    const scrollWidth = this.getScrollWidth(orderedIds, columnMap, fixedWidth)
+    const height = 42 + (rowHeight * (loading ? numRows : data.length))
+
     return (
-      <div
-        className={classnames(
-          'galahad',
-          { selected: !!selectedColumn },
-          className
-        )}
-        ref={this.setTableRef}
-        {...others}
-      >
+      <Scrollbars ref={this.setScrollbarsRef} style={{ width: parentWidth, height }}>
         <div
-          style={{
-            display: 'flex',
-            margin: '0 -12px',
-            height: `${42 + (rowHeight * (loading ? numRows : data.length))}px`
-          }}
+          className={classnames(
+            'galahad',
+            { selected: !!selectedColumn },
+            className
+          )}
+          ref={this.setTableRef}
+          {...others}
         >
-          {orderedIds.map((columnId) => {
-            const column = columnMap[columnId]
+          <div
+            style={{
+              display: 'flex',
+              width: `${scrollWidth}px`,
+              height: `${height}px`
+            }}
+          >
+            {orderedIds.map((columnId) => {
+              const column = columnMap[columnId]
 
-            const isLastLeftColumn = column.id === groups.left[groups.left.length - 1]
-            const isSelected = !!(selectedColumn && isDragging && selectedColumn.id === column.id)
-            const outsideDraggingGroup = !!(
-              selectedColumn && isDragging && selectedColumn.group !== column.group
-            )
+              const width = getColumnWidth(column, this.getWidth(), fixedWidth)
 
-            const style = {
-              selected: spring(isSelected ? 1 : 0, springConfig),
-              x: isSelected ? mouseX : spring(runningX, springConfig),
-            }
+              const isLastLeftColumn = column.id === groups.left[groups.left.length - 1]
+              const isSelected = !!(selectedColumn && isDragging && selectedColumn.id === column.id)
+              const outsideDraggingGroup = !!(
+                selectedColumn && isDragging && selectedColumn.group !== column.group
+              )
 
-            const width = getColumnWidth(column, this.getWidth(), fixedWidth)
+              const RenderHeader = column.renderHeader || (() => null)
 
-            const RenderHeader = column.renderHeader || (() => null)
+              const touchStartCb = this.handleTouchStart(column, runningX)
+              const mouseDownCb = this.handleMouseDown(column, runningX)
 
-            runningX += width
+              const style = {
+                selected: spring(isSelected ? 1 : 0, springConfig),
+                x: isSelected ? mouseXFromTable - mouseXFromColumn : spring(runningX, springConfig),
+              }
 
-            return (
-              <Motion style={style} key={column.id}>
-                {({ selected, x }) => (
-                  <DataColumn
-                    group={column.group || 'center'}
-                    verticalLines={false}
-                    lastLeftColumn={isLastLeftColumn}
-                    outsideDraggingGroup={outsideDraggingGroup}
-                    isSelected={isSelected}
-                    style={{
-                      width: `${width}px`,
-                      transform: `translate3d(${Math.floor(x)}px, 0, 0) scale(${1 + (selected * 0.05)})`,
-                      boxShadow: `0 ${selected * 16}px ${selected * 24}px 0 rgba(25, 29, 34, ${selected * 0.1})`,
-                    }}
-                  >
-                    <HeaderCell
-                      isDraggable={this.isDraggable(column)}
-                      onTouchStart={this.handleTouchStart(column, x)}
-                      onMouseDown={this.handleMouseDown(column, x)}
+              runningX += width
+
+              return (
+                <Motion style={style} key={column.id}>
+                  {({ selected, x }) => (
+                    <DataColumn
+                      group={column.group || 'center'}
+                      verticalLines={false}
+                      lastLeftColumn={isLastLeftColumn}
+                      outsideDraggingGroup={outsideDraggingGroup}
+                      isSelected={isSelected}
+                      style={{
+                        width: `${width}px`,
+                        transform: `translate3d(${Math.floor(x)}px, 0, 0)`,
+                        boxShadow: `0 ${selected * 16}px ${selected * 24}px 0 rgba(25, 29, 34, ${selected * 0.1})`
+                      }}
                     >
-                      <RenderHeader self={column} />
-                    </HeaderCell>
+                      <HeaderCell
+                        isDraggable={this.isDraggable(column)}
+                        onTouchStart={touchStartCb}
+                        onMouseDown={mouseDownCb}
+                      >
+                        <RenderHeader self={column} />
+                      </HeaderCell>
 
-                    {this.renderColumnData(
-                      column,
-                      data,
-                      isExpanded,
-                      loading,
-                      isDragging ? null : hoverRowIndex
-                    )}
-                  </DataColumn>
-                )}
-              </Motion>
-            )
-          })}
+                      {this.renderColumnData(
+                        column,
+                        data,
+                        isExpanded,
+                        loading,
+                        isDragging ? null : hoverRowIndex
+                      )}
+                    </DataColumn>
+                  )}
+                </Motion>
+              )
+            })}
+          </div>
         </div>
-      </div>
+      </Scrollbars>
     )
   }
 }

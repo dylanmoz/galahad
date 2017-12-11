@@ -21,7 +21,7 @@ const renderHeader = sortBy => ({ self }) => (
 )
 
 const simpleRender = render => ({ entity, self }) => (
-  <div style={{ display: 'flex', height: '100%', alignItems: 'center', overflow: 'scroll' }}>
+  <div style={{ display: 'flex', height: '100%', alignItems: 'center' }}>
     {render ? render({ entity, self }) : entity[self.id]}
   </div>
 )

@@ -20,25 +20,25 @@ const definitions = [
     id: 'house',
     renderHeader,
     render: simpleRender,
-    spanPercent: 1/4
+    spanPercent: 2/5
   },
   {
     id: 'region',
     renderHeader,
     render: simpleRender,
-    spanPercent: 1/4
+    spanPercent: 2/5
   },
   {
     id: 'capital',
     renderHeader,
     render: simpleRender,
-    spanPercent: 1/4
+    spanPercent: 2/5
   },
   {
     id: 'banner',
     renderHeader,
     render: ({ entity }) => <Image url={entity.banner} />,
-    spanPercent: 1/4,
+    spanPercent: 2/5,
     noSort: true
   }
 ]
