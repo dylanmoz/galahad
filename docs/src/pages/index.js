@@ -87,8 +87,6 @@ class IndexPage extends React.Component<any> {
                 span={{ xs: 1, lg: 10/12, xl: 8/12 }}
                 offset={{ xs: 0, lg: 1/12, xl: 2/12 }}
               >
-                {/* <h1 style={{ textAlign: 'center', marginBottom: 36 }}></h1> */}
-                {/* <h5 style={{ textAlign: 'center', marginBottom: 36 }}>A table, made in React.</h5> */}
                 <SlideUp style={{ borderRadius: '3px' }}>
                   <Card>
                     <MainDemo />

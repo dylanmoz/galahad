@@ -3,7 +3,8 @@
 import React from 'react'
 
 type Props = {
-  w: string | number
+  w: string | number,
+  style: any
 }
 
 export default function Placeloader({ w, style, ...others }: Props) {

@@ -8,7 +8,7 @@ import Table from './Table'
 
 const Image = ({ url }) => (
   <div style={{ display: 'flex', height: '100%', alignItems: 'center' }}>
-    <img src={url} style={{ height: '36px' }} />
+    <img src={url} style={{ height: '36px' }} alt="banner" />
   </div>
 )
 

@@ -70,6 +70,7 @@ export default class Table extends React.Component<any, State> {
     }))
 
     const sortedData = data.sort((a, b) => (
+      // eslint-disable-next-line no-bitwise
       ((a[sortBy.id] < b[sortBy.id] ^ sortBy.order === 'ASC') === 0 ? -1 : 1))
     )
 

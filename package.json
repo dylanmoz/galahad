@@ -78,6 +78,7 @@
     "lodash": "^4.17.4",
     "moize": "^4.0.3",
     "react": "^16.0.0",
+    "react-custom-scrollbars": "^4.2.1",
     "react-dom": "^16.0.0",
     "react-motion": "^0.5.2"
   }

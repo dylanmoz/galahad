@@ -14,7 +14,7 @@ export type DataColumnDefinition = {
   renderHeader: ComponentType<{ self: DataColumnDefinition }>,
   render: ComponentType<DataColumnProps<*>>,
   renderHover?: ComponentType<DataColumnProps<*>>,
-  renderLoading?: ComponentType<DataColumnProps<*>>,
+  renderLoading?: ComponentType<{ self: DataColumnDefinition }>,
   spanPercent: number,
   spanFixed: any,
   textAlign?: 'left' | 'right'

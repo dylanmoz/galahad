@@ -27,14 +27,14 @@ export default class Delay extends React.Component<Props> {
   }
 
   refresh(props) {
-    let { value, period } = props
+    const { value, period } = props
 
     setTimeout(() => this.setState({
       value
     }), period)
   }
 
-  render(){
+  render() {
     return this.props.children(this.state.value)
   }
 }
