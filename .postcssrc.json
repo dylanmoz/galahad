@@ -1,0 +1,9 @@
+{
+  "plugins": {
+    "autoprefixer": {
+      "cascade": false,
+      "remove": false,
+      "browsers": ["> 0.1%", "last 2 versions", "Firefox ESR", "IE 9"]
+    }
+  }
+}

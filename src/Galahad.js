@@ -460,6 +460,7 @@ class Galahad extends React.Component<Props, State> {
                         isDraggable={this.isDraggable(column)}
                         onTouchStart={touchStartCb}
                         onMouseDown={mouseDownCb}
+                        style={{ textAlign: column.textAlign || 'left' }}
                       >
                         <RenderHeader self={column} />
                       </HeaderCell>
