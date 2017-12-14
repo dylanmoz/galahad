@@ -1,6 +1,6 @@
 {
   "name": "galahad",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "It's a data table, made in React.",
   "main": "lib/index.js",
   "scripts": {
