@@ -78,8 +78,26 @@ class Galahad extends React.Component<Props, State> {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (this.props.columns !== nextProps.columns) {
-      this.setState({ columnMap: keyBy(nextProps.columns, 'id') })
+    const { columns, selectedColumns, fixedWidth } = this.props
+    const { orderedIds } = this.state
+
+    let { columnMap } = this.state
+    if (columns !== nextProps.columns) {
+      columnMap = keyBy(nextProps.columns, 'id')
+      this.setState({ columnMap })
+    }
+
+    if (this.props.selectedColumns !== nextProps.selectedColumns) {
+      if (!orderedIds.every((id, i) => id === selectedColumns[i])) {
+        this.setState({
+          orderedIds: getColumnGroups(
+            nextProps.selectedColumns,
+            columnMap,
+            this.getWidth(),
+            fixedWidth
+          ).orderedIds
+        })
+      }
     }
   }
 
@@ -460,7 +478,7 @@ class Galahad extends React.Component<Props, State> {
                         isDraggable={this.isDraggable(column)}
                         onTouchStart={touchStartCb}
                         onMouseDown={mouseDownCb}
-                        style={{ textAlign: column.textAlign || 'left' }}
+                        style={{ justifyContent: column.textAlign === 'right' ? 'flex-end' : 'flex-start' }}
                       >
                         <RenderHeader self={column} />
                       </HeaderCell>

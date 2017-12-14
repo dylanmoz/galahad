@@ -42,6 +42,12 @@
 
     &:not(.selected):last-child {
       & .data-cell, & .header-cell {
+        padding-right: 24px;
+      }
+    }
+
+    &:not(.selected):last-child {
+      & .data-cell, & .header-cell {
         // margin-left: -0.05px;
         // padding-left: 12px;
         // margin-right: -12px;
