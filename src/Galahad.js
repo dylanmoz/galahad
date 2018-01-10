@@ -88,7 +88,7 @@ class Galahad extends React.Component<Props, State> {
     }
 
     if (this.props.selectedColumns !== nextProps.selectedColumns) {
-      if (!orderedIds.every((id, i) => id === selectedColumns[i])) {
+      if (!orderedIds.every((id, i) => id === nextProps.selectedColumns[i])) {
         this.setState({
           orderedIds: getColumnGroups(
             nextProps.selectedColumns,
