@@ -177,19 +177,19 @@ class Galahad extends React.Component<Props, State> {
     const { selectedColumns } = this.props
     const { orderedIds, selectedColumn, isDragging } = this.state
 
-    if (selectedColumn && !isDragging) {
-      this.props.onHeaderClick(selectedColumn)
-    }
+    if (selectedColumn) {
+      if (!isDragging) {
+        this.props.onHeaderClick(selectedColumn)
+      } else if (!orderedIds.every((id, i) => id === selectedColumns[i])) {
+        this.props.onColumnChange(orderedIds)
+      }
 
-    if (!orderedIds.every((id, i) => id === selectedColumns[i])) {
-      this.props.onColumnChange(orderedIds)
+      this.setState({
+        selectedColumn: null,
+        mouseXFromColumn: 0,
+        isDragging: false
+      })
     }
-
-    this.setState({
-      selectedColumn: null,
-      mouseXFromColumn: 0,
-      isDragging: false
-    })
   }
 
   handleTouchStart = (column, columnX) => (e) => {
