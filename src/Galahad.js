@@ -336,13 +336,15 @@ class Galahad extends React.Component<Props, State> {
               isExpanded={isExpanded}
               isLastRow={i === list.length - 1}
             >
-              {column.renderLoading ? <column.renderLoading key={renderKey} self={column} /> : (
-                <Placeloader
-                  key={renderKey}
-                  w="60px"
-                  style={{ float: column.textAlign || 'left' }}
-                />
-              )}
+              <DataCellInner>
+                {column.renderLoading ? <column.renderLoading key={renderKey} self={column} /> : (
+                  <Placeloader
+                    key={renderKey}
+                    w="60px"
+                    style={{ float: column.textAlign || 'left' }}
+                  />
+                )}
+              </DataCellInner>
             </DataCell>
           )
         }
