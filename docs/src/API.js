@@ -52,6 +52,7 @@ export default () => (
           { field: 'group', type: '\'left\' | \'right\'', description: 'The group to set the column in, if not set the column will be in the center group' },
           { field: 'renderHeader', type: '?ComponentType<{ self: DataColumnDefinition }>', description: 'Component that will render the header of a given column' },
           { field: 'render', type: 'ComponentType<DataColumnProps<*>>', description: 'Component that will render a single cell in a column' },
+          { field: 'wrapper', type: 'ComponentType<DataColumnProps<*> & { children: Node }>', description: 'Component that will wrap the entirety of a cell. Useful for links.' },
           { field: 'renderHover', type: '?ComponentType<DataColumnProps<*>>', description: 'If provided, this will render when the row is hovered' },
           { field: 'renderLoading', type: 'ComponentType<DataColumnProps<*>>', description: 'Override a cell\'s loading interstitial with something of your own' },
           { field: 'spanPercent', type: 'number', description: 'If fixedWidth is false, set the column\'s width as a fraction of the table\'s width' },

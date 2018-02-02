@@ -12,7 +12,7 @@ import withParentSize from './utils/withParentSize'
 import cache from './utils/cache'
 import getColumnGroups from './utils/getColumnGroups'
 import getColumnWidth from './utils/getColumnWidth'
-import DataCell from './DataCell'
+import DataCell, { DataCellInner } from './DataCell'
 import HeaderCell from './HeaderCell'
 import DataColumn from './DataColumn'
 import Placeloader from './Placeloader'
@@ -141,7 +141,7 @@ class Galahad extends React.Component<Props, State> {
     (orderedIds: Array<string>) => (
       orderedIds.some(col => this.state.columnMap[col].expanded)
     ),
-    { maxSize: 50 }
+    { maxSize: 10 }
   )
 
   handleMouseEnter = cache(
@@ -363,7 +363,17 @@ class Galahad extends React.Component<Props, State> {
             isLastRow={i === list.length - 1}
             style={{ textAlign: column.textAlign || 'left' }}
           >
-            <ColumnRender entity={item} self={column} />
+            {column.wrapper ? (
+              <column.wrapper entity={item} self={column}>
+                <DataCellInner>
+                  <ColumnRender entity={item} self={column} />
+                </DataCellInner>
+              </column.wrapper>
+            ) : (
+              <DataCellInner>
+                <ColumnRender entity={item} self={column} />
+              </DataCellInner>
+            )}
           </DataCell>
         )
       })

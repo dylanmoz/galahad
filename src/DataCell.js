@@ -11,6 +11,10 @@ type Props = {
   className?: string
 }
 
+type InnerProps = {
+  className?: string
+}
+
 const DataCell = ({ isExpanded, hovering, isLastRow, className, ...others }: Props) => (
   <div
     className={classnames(
@@ -20,6 +24,16 @@ const DataCell = ({ isExpanded, hovering, isLastRow, className, ...others }: Pro
         'last-row': isLastRow,
         hovering
       },
+      className
+    )}
+    {...others}
+  />
+)
+
+export const DataCellInner = ({ className, ...others }: InnerProps) => (
+  <div
+    className={classnames(
+      'data-cell-inner',
       className
     )}
     {...others}

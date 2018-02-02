@@ -17,11 +17,22 @@
     border-bottom: 1px solid transparent;
     overflow-x: hidden;
 
-    & .data-cell, & .header-cell {
+    & .header-cell {
       margin-left: -0.05px;
       padding-left: 12px;
       margin-right: 0;
       padding-right: 12px;
+    }
+
+    & .data-cell {
+      margin-left: -0.05px;
+      margin-right: 0;
+
+      & .data-cell-inner {
+        height: 100%;
+        padding-left: 12px;
+        padding-right: 12px;
+      }
     }
 
     &.selected {
@@ -35,23 +46,14 @@
     }
 
     &:not(.selected):first-child {
-      & .data-cell, & .header-cell {
+      & .data-cell-inner, & .header-cell {
         padding-left: 24px;
       }
     }
 
     &:not(.selected):last-child {
-      & .data-cell, & .header-cell {
+      & .data-cell-inner, & .header-cell {
         padding-right: 24px;
-      }
-    }
-
-    &:not(.selected):last-child {
-      & .data-cell, & .header-cell {
-        // margin-left: -0.05px;
-        // padding-left: 12px;
-        // margin-right: -12px;
-        // padding-right: 24px;
       }
     }
 
