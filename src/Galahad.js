@@ -49,7 +49,6 @@ type State = {
 class Galahad extends React.Component<Props, State> {
   table: ?HTMLDivElement
   scrollbars: ?Object
-  tableRect: ?({ top: number, left: number, width: number, height: number })
   hoverTimeout: ?number
 
   constructor(props: Props) {
@@ -112,8 +111,9 @@ class Galahad extends React.Component<Props, State> {
 
   setTableRef = (ref: ?HTMLDivElement) => {
     this.table = ref
-    this.tableRect = ref ? ref.getBoundingClientRect() : null
   }
+
+  getTableRect = () => this.table ? this.table.getBoundingClientRect() : null
 
   setScrollbarsRef = (ref: ?Object) => {
     this.scrollbars = ref
@@ -199,12 +199,13 @@ class Galahad extends React.Component<Props, State> {
   }
 
   handleMouseDown = (column, columnOffsetX) => (e) => {
+    const tableRect = this.getTableRect()
     if (e.button !== 0 && !(e instanceof Touch)) return
-    if (!this.tableRect || !this.scrollbars) return
+    if (!tableRect || !this.scrollbars) return
 
     const scrollLeft = this.scrollbars.getScrollLeft()
     // flow-disable-next-line why flow why
-    const tableLeft = this.tableRect.left
+    const tableLeft = tableRect.left
 
     this.setState({
       selectedColumn: column,
@@ -246,13 +247,14 @@ class Galahad extends React.Component<Props, State> {
   }
 
   handleMouseMove = ({ pageX }) => {
+    const tableRect = this.getTableRect()
     const { fixedWidth } = this.props
     const { selectedColumn, columnMap } = this.state
 
-    if (!selectedColumn || !this.tableRect || !this.scrollbars) return
+    if (!selectedColumn || !tableRect || !this.scrollbars) return
 
-    const tableLeft = this.tableRect.left
-    const tableWidth = this.tableRect.width
+    const tableLeft = tableRect.left
+    const tableWidth = tableRect.width
 
     let runningX = 0
     // Pixel offset from the left side of table
