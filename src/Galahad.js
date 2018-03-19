@@ -113,7 +113,7 @@ class Galahad extends React.Component<Props, State> {
     this.table = ref
   }
 
-  getTableRect = () => this.table ? this.table.getBoundingClientRect() : null
+  getTableRect = () => (this.table ? this.table.getBoundingClientRect() : null)
 
   setScrollbarsRef = (ref: ?Object) => {
     this.scrollbars = ref
