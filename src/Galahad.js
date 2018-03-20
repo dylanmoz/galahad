@@ -435,7 +435,7 @@ class Galahad extends React.Component<Props, State> {
     const height = 42 + (rowHeight * (loading ? numRows : data.length))
 
     return (
-      <Scrollbars ref={this.setScrollbarsRef} style={{ width: parentWidth, height }}>
+      <Scrollbars ref={this.setScrollbarsRef} style={{ width: '100%', height }}>
         <div
           className={classnames(
             'galahad',
