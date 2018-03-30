@@ -48,7 +48,7 @@ type State = {
 
 class Galahad extends React.Component<Props, State> {
   table: ?HTMLDivElement
-  scrollbars: ?Object
+  scrollbars: any
   hoverTimeout: ?number
 
   constructor(props: Props) {
@@ -204,8 +204,7 @@ class Galahad extends React.Component<Props, State> {
     if (!tableRect || !this.scrollbars) return
 
     const scrollLeft = this.scrollbars.getScrollLeft()
-    // flow-disable-next-line why flow why
-    const tableLeft = tableRect.left
+    const tableLeft = this.scrollbars.view.getBoundingClientRect().left
 
     this.setState({
       selectedColumn: column,
@@ -253,7 +252,7 @@ class Galahad extends React.Component<Props, State> {
 
     if (!selectedColumn || !tableRect || !this.scrollbars) return
 
-    const tableLeft = tableRect.left
+    const tableLeft = this.scrollbars.view.getBoundingClientRect().left
     const tableWidth = tableRect.width
 
     let runningX = 0
