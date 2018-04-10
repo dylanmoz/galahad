@@ -16,6 +16,7 @@ export type DataColumnDefinition = {
   wrapper: ComponentType<DataColumnProps<*> & { children: Node }>,
   renderHover?: ComponentType<DataColumnProps<*>>,
   renderLoading?: ComponentType<{ self: DataColumnDefinition }>,
+  height?: number,
   spanPercent: number,
   spanFixed: any,
   textAlign?: 'left' | 'right'

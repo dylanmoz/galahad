@@ -5,27 +5,28 @@ import type { ComponentType } from 'react'
 import classnames from 'classnames'
 
 type Props = {
-  isExpanded: boolean,
+  rowHeight: number,
   hovering?: boolean,
   isLastRow?: boolean,
-  className?: string
+  className?: string,
+  style?: ?any
 }
 
 type InnerProps = {
   className?: string
 }
 
-const DataCell = ({ isExpanded, hovering, isLastRow, className, ...others }: Props) => (
+const DataCell = ({ rowHeight, hovering, isLastRow, className, style, ...others }: Props) => (
   <div
     className={classnames(
       'data-cell',
       {
-        expanded: isExpanded,
         'last-row': isLastRow,
         hovering
       },
       className
     )}
+    style={{ height: rowHeight, ...style }}
     {...others}
   />
 )

@@ -144,6 +144,15 @@ class Galahad extends React.Component<Props, State> {
     { maxSize: 10 }
   )
 
+  getRowHeight = cache(
+    (orderedIds: Array<string>) => {
+      const heights = orderedIds.map(col => this.state.columnMap[col].height || 60)
+
+      return this.isExpanded(orderedIds) ? 84 : Math.max(...heights)
+    },
+    { maxSize: 10 }
+  )
+
   handleMouseEnter = cache(
     (hoverRowIndex: string) => () => {
       this.handleHover(hoverRowIndex)
@@ -321,7 +330,7 @@ class Galahad extends React.Component<Props, State> {
     (
       column: DataColumnDefinition,
       tableData: TableData,
-      isExpanded: boolean,
+      rowHeight: number,
       loading: boolean,
       hoverRowIndex: boolean
     ) => {
@@ -334,7 +343,7 @@ class Galahad extends React.Component<Props, State> {
           return (
             <DataCell
               key={`cell-${i}-${column.id}`} // eslint-disable-line react/no-array-index-key
-              isExpanded={isExpanded}
+              rowHeight={rowHeight}
               isLastRow={i === list.length - 1}
             >
               <DataCellInner>
@@ -361,7 +370,7 @@ class Galahad extends React.Component<Props, State> {
             key={`${column.id}-${i}`} // eslint-disable-line react/no-array-index-key
             onMouseEnter={this.handleMouseEnter(i)}
             onMouseLeave={this.handleMouseLeave}
-            isExpanded={isExpanded}
+            rowHeight={rowHeight}
             hovering={hovering}
             isLastRow={i === list.length - 1}
             style={{ textAlign: column.textAlign || 'left' }}
@@ -424,8 +433,7 @@ class Galahad extends React.Component<Props, State> {
 
     let runningX = 0
     const { orderedIds, groups } = this.getColumnGroups()
-    const isExpanded = this.isExpanded(orderedIds)
-    const rowHeight = isExpanded ? 84 : 60
+    const rowHeight = this.getRowHeight(orderedIds)
 
     const data = tableData || []
     const numRows = numLoadingRows || 10
@@ -501,7 +509,7 @@ class Galahad extends React.Component<Props, State> {
                       {this.renderColumnData(
                         column,
                         data,
-                        isExpanded,
+                        rowHeight,
                         loading,
                         isDragging ? null : hoverRowIndex
                       )}
