@@ -78,9 +78,11 @@
     "classnames": "^2.2.5",
     "lodash": "^4.17.4",
     "moize": "^4.0.3",
-    "react": "^16.3.0",
     "react-custom-scrollbars": "^4.2.1",
-    "react-dom": "^16.3.0",
     "react-motion": "^0.5.2"
+  },
+  "peerDependencies": {
+    "react": "^16.3.0",
+    "react-dom": "^16.3.0"
   }
 }
