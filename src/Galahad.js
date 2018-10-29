@@ -42,6 +42,7 @@ type State = {
   orderedIds: string[],
   mouseXFromTable: number,
   mouseXFromColumn: number,
+  mouseXOnMouseDown: number,
   isDragging: boolean,
   columnMap: { [key: string]: DataColumnDefinition }
 }
@@ -64,6 +65,7 @@ class Galahad extends React.Component<Props, State> {
       orderedIds: columnGroups.orderedIds,
       mouseXFromTable: 0,
       mouseXFromColumn: 0,
+      mouseXOnMouseDown: 0,
       isDragging: false,
       columnMap
     }
@@ -87,7 +89,8 @@ class Galahad extends React.Component<Props, State> {
     }
 
     if (this.props.selectedColumns !== nextProps.selectedColumns) {
-      if (this.props.selectedColumns.length !== nextProps.selectedColumns.length ||
+      if (
+        this.props.selectedColumns.length !== nextProps.selectedColumns.length ||
         !orderedIds.every((id, i) => id === nextProps.selectedColumns[i])
       ) {
         this.setState({
@@ -122,8 +125,9 @@ class Galahad extends React.Component<Props, State> {
   isDraggable = (column: DataColumnDefinition) => {
     const { groups } = this.getColumnGroups()
 
-    const notDraggable = (column.group === 'left' && groups.left.length <= 1)
-    || (column.group === 'right' && groups.right.length <= 1)
+    const notDraggable =
+      (column.group === 'left' && groups.left.length <= 1) ||
+      (column.group === 'right' && groups.right.length <= 1)
 
     return !notDraggable
   }
@@ -138,9 +142,7 @@ class Galahad extends React.Component<Props, State> {
   }
 
   isExpanded = cache(
-    (orderedIds: Array<string>) => (
-      orderedIds.some(col => this.state.columnMap[col].expanded)
-    ),
+    (orderedIds: Array<string>) => orderedIds.some(col => this.state.columnMap[col].expanded),
     { maxSize: 10 }
   )
 
@@ -184,30 +186,35 @@ class Galahad extends React.Component<Props, State> {
     this.handleMouseUp()
   }
 
-  handleMouseUp = () => {
+  handleMouseUp = e => {
     const { selectedColumns } = this.props
-    const { orderedIds, selectedColumn, isDragging } = this.state
+    const { orderedIds, selectedColumn, isDragging, mouseXOnMouseDown } = this.state
 
     if (selectedColumn) {
       if (!isDragging) {
         this.props.onHeaderClick(selectedColumn)
       } else if (!orderedIds.every((id, i) => id === selectedColumns[i])) {
         this.props.onColumnChange(orderedIds)
+      } else if (Math.abs(mouseXOnMouseDown - e.pageX) <= 5) {
+        // If the column was dragged, but only a very small amount (<= 5px), then still register
+        // it as a click
+        this.props.onHeaderClick(selectedColumn)
       }
 
       this.setState({
         selectedColumn: null,
         mouseXFromColumn: 0,
+        mouseXOnMouseDown: 0,
         isDragging: false
       })
     }
   }
 
-  handleTouchStart = (column, columnX) => (e) => {
+  handleTouchStart = (column, columnX) => e => {
     this.handleMouseDown(column, columnX)(e.touches[0])
   }
 
-  handleMouseDown = (column, columnOffsetX) => (e) => {
+  handleMouseDown = (column, columnOffsetX) => e => {
     const tableRect = this.getTableRect()
     if (e.button !== 0 && !(e instanceof Touch)) return
     if (!tableRect || !this.scrollbars) return
@@ -218,11 +225,12 @@ class Galahad extends React.Component<Props, State> {
     this.setState({
       selectedColumn: column,
       mouseXFromTable: e.pageX - tableLeft,
-      mouseXFromColumn: (e.pageX - tableLeft - columnOffsetX) + scrollLeft
+      mouseXOnMouseDown: e.pageX,
+      mouseXFromColumn: e.pageX - tableLeft - columnOffsetX + scrollLeft
     })
   }
 
-  handleTouchMove = (e) => {
+  handleTouchMove = e => {
     this.handleMouseMove(e.touches[0])
   }
 
@@ -266,7 +274,7 @@ class Galahad extends React.Component<Props, State> {
 
     let runningX = 0
     // Pixel offset from the left side of table
-    const mouseXFromTable = (pageX + this.scrollbars.getScrollLeft()) - tableLeft
+    const mouseXFromTable = pageX + this.scrollbars.getScrollLeft() - tableLeft
 
     const leftOfTable = pageX < tableLeft
     const rightOfTable = pageX > tableLeft + tableWidth
@@ -276,11 +284,7 @@ class Galahad extends React.Component<Props, State> {
     }
     if (!this.isDraggable(selectedColumn)) return
 
-    const {
-      orderedIds,
-      centerLeft,
-      centerRight
-    } = this.getColumnGroups()
+    const { orderedIds, centerLeft, centerRight } = this.getColumnGroups()
 
     const { group } = selectedColumn
 
@@ -289,7 +293,7 @@ class Galahad extends React.Component<Props, State> {
     if (!group && (mouseXFromTable < centerLeft || mouseXFromTable > centerRight)) return
 
     // Find what index the selected column should be
-    const columnIndex = range(0, orderedIds.length).find((i) => {
+    const columnIndex = range(0, orderedIds.length).find(i => {
       const currentColumn = columnMap[orderedIds[i]]
       const width = getColumnWidth(currentColumn, this.getWidth(), fixedWidth)
       const currentRunningX = runningX
@@ -306,9 +310,7 @@ class Galahad extends React.Component<Props, State> {
       return mouseXFromTable > currentRunningX && mouseXFromTable < runningX
     })
 
-    const currentIndex = range(0, orderedIds.length).find(i => (
-      orderedIds[i] === selectedColumn.id
-    ))
+    const currentIndex = range(0, orderedIds.length).find(i => orderedIds[i] === selectedColumn.id)
 
     this.setState({
       mouseXFromTable,
@@ -320,11 +322,15 @@ class Galahad extends React.Component<Props, State> {
     }
   }
 
-  transition = throttle((from: any, to: any) => {
-    this.setState({
-      orderedIds: moveArrayElement(this.getColumnGroups().orderedIds, from, to)
-    })
-  }, 500, { leading: true, trailing: false })
+  transition = throttle(
+    (from: any, to: any) => {
+      this.setState({
+        orderedIds: moveArrayElement(this.getColumnGroups().orderedIds, from, to)
+      })
+    },
+    500,
+    { leading: true, trailing: false }
+  )
 
   renderColumnData = cache(
     (
@@ -334,7 +340,7 @@ class Galahad extends React.Component<Props, State> {
       loading: boolean,
       hoverRowIndex: boolean
     ) => {
-      const list = (loading ? range(this.props.numLoadingRows || 10) : tableData)
+      const list = loading ? range(this.props.numLoadingRows || 10) : tableData
 
       return list.map((item, i) => {
         const renderKey = `${column.id}-${i}`
@@ -347,7 +353,9 @@ class Galahad extends React.Component<Props, State> {
               isLastRow={i === list.length - 1}
             >
               <DataCellInner>
-                {column.renderLoading ? <column.renderLoading key={renderKey} self={column} /> : (
+                {column.renderLoading ? (
+                  <column.renderLoading key={renderKey} self={column} />
+                ) : (
                   <Placeloader
                     key={renderKey}
                     w="60px"
@@ -359,11 +367,9 @@ class Galahad extends React.Component<Props, State> {
           )
         }
 
-        const hovering = (i === hoverRowIndex)
+        const hovering = i === hoverRowIndex
 
-        const ColumnRender = hovering && column.renderHover ?
-          column.renderHover
-          : column.render
+        const ColumnRender = hovering && column.renderHover ? column.renderHover : column.render
 
         return (
           <DataCell
@@ -394,15 +400,14 @@ class Galahad extends React.Component<Props, State> {
   )
 
   getScrollWidth = cache(
-    (orderedIds, columnMap, fixedWidth) => (
+    (orderedIds, columnMap, fixedWidth) =>
       orderedIds.reduce((sum, columnId) => {
         const column = columnMap[columnId]
 
         const width = getColumnWidth(column, this.getWidth(), fixedWidth)
 
         return sum + width
-      }, 0)
-    ),
+      }, 0),
     { maxSize: 25 }
   )
 
@@ -439,16 +444,12 @@ class Galahad extends React.Component<Props, State> {
     const numRows = numLoadingRows || 10
 
     const scrollWidth = this.getScrollWidth(orderedIds, columnMap, fixedWidth)
-    const height = 42 + (rowHeight * (loading ? numRows : data.length))
+    const height = 42 + rowHeight * (loading ? numRows : data.length)
 
     return (
       <Scrollbars ref={this.setScrollbarsRef} style={{ width: '100%', height }}>
         <div
-          className={classnames(
-            'galahad',
-            { selected: !!selectedColumn },
-            className
-          )}
+          className={classnames('galahad', { selected: !!selectedColumn }, className)}
           ref={this.setTableRef}
           {...others}
         >
@@ -459,7 +460,7 @@ class Galahad extends React.Component<Props, State> {
               height: `${height}px`
             }}
           >
-            {orderedIds.map((columnId) => {
+            {orderedIds.map(columnId => {
               const column = columnMap[columnId]
 
               const width = getColumnWidth(column, this.getWidth(), fixedWidth)
@@ -467,7 +468,9 @@ class Galahad extends React.Component<Props, State> {
               const isLastLeftColumn = column.id === groups.left[groups.left.length - 1]
               const isSelected = !!(selectedColumn && isDragging && selectedColumn.id === column.id)
               const outsideDraggingGroup = !!(
-                selectedColumn && isDragging && selectedColumn.group !== column.group
+                selectedColumn &&
+                isDragging &&
+                selectedColumn.group !== column.group
               )
 
               const RenderHeader = column.renderHeader || (() => null)
@@ -477,7 +480,7 @@ class Galahad extends React.Component<Props, State> {
 
               const style = {
                 selected: spring(isSelected ? 1 : 0, springConfig),
-                x: isSelected ? mouseXFromTable - mouseXFromColumn : spring(runningX, springConfig),
+                x: isSelected ? mouseXFromTable - mouseXFromColumn : spring(runningX, springConfig)
               }
 
               runningX += width
@@ -494,14 +497,17 @@ class Galahad extends React.Component<Props, State> {
                       style={{
                         width: `${width}px`,
                         transform: `translate3d(${Math.floor(x)}px, 0, 0)`,
-                        boxShadow: `0 ${selected * 16}px ${selected * 24}px 0 rgba(25, 29, 34, ${selected * 0.1})`
+                        boxShadow: `0 ${selected * 16}px ${selected *
+                          24}px 0 rgba(25, 29, 34, ${selected * 0.1})`
                       }}
                     >
                       <HeaderCell
                         isDraggable={this.isDraggable(column)}
                         onTouchStart={touchStartCb}
                         onMouseDown={mouseDownCb}
-                        style={{ justifyContent: column.textAlign === 'right' ? 'flex-end' : 'flex-start' }}
+                        style={{
+                          justifyContent: column.textAlign === 'right' ? 'flex-end' : 'flex-start'
+                        }}
                       >
                         <RenderHeader self={column} />
                       </HeaderCell>

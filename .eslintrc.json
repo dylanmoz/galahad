@@ -4,13 +4,8 @@
     "jest": true
   },
   "parser": "babel-eslint",
-  "extends": [
-    "airbnb",
-    "plugin:flowtype/recommended"
-  ],
-  "plugins": [
-    "flowtype"
-  ],
+  "extends": ["airbnb", "plugin:flowtype/recommended", "prettier"],
+  "plugins": ["flowtype", "prettier"],
   "rules": {
     "space-infix-ops": 0,
     "react/prop-types": 1,
@@ -24,14 +19,11 @@
     "no-unexpected-multiline": 2,
     "flowtype/require-valid-file-annotation": [2, "always"],
     "no-use-before-define": [2, { "functions": false }],
-    "react/sort-comp": [2, {
-      "order": [
-        "type-annotations",
-        "static-methods",
-        "lifecycle",
-        "everything-else",
-        "render"
-      ]
-    }]
+    "react/sort-comp": [
+      2,
+      {
+        "order": ["type-annotations", "static-methods", "lifecycle", "everything-else", "render"]
+      }
+    ]
   }
 }
