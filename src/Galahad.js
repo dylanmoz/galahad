@@ -195,7 +195,7 @@ class Galahad extends React.Component<Props, State> {
         this.props.onHeaderClick(selectedColumn)
       } else if (!orderedIds.every((id, i) => id === selectedColumns[i])) {
         this.props.onColumnChange(orderedIds)
-      } else if (Math.abs(mouseXOnMouseDown - e.pageX) <= 5) {
+      } else if (e && Math.abs(mouseXOnMouseDown - e.pageX) <= 5) {
         // If the column was dragged, but only a very small amount (<= 5px), then still register
         // it as a click
         this.props.onHeaderClick(selectedColumn)
