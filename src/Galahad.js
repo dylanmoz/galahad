@@ -51,6 +51,7 @@ class Galahad extends React.Component<Props, State> {
   table: ?HTMLDivElement
   scrollbars: any
   hoverTimeout: ?number
+  animate: boolean
 
   constructor(props: Props) {
     super(props)
@@ -59,6 +60,7 @@ class Galahad extends React.Component<Props, State> {
     const columnMap = keyBy(this.props.columns, 'id')
     const columnGroups = getColumnGroups(selectedColumns, columnMap, this.getWidth(), fixedWidth)
 
+    this.animate = true
     this.state = {
       hoverRowIndex: null,
       selectedColumn: null,
@@ -78,24 +80,32 @@ class Galahad extends React.Component<Props, State> {
     window.addEventListener('mouseup', this.handleMouseUp)
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     const { columns, selectedColumns, fixedWidth } = this.props
     const { orderedIds } = this.state
 
     let { columnMap } = this.state
-    if (columns !== nextProps.columns) {
-      columnMap = keyBy(nextProps.columns, 'id')
-      this.setState({ columnMap })
+    if (columns !== prevProps.columns) {
+      columnMap = keyBy(prevProps.columns, 'id')
+      this.setState({ columnMap }) // eslint-disable-line react/no-did-update-set-state
     }
 
-    if (this.props.selectedColumns !== nextProps.selectedColumns) {
+    // If a column has been added or removed, do not animate the columns to accomadate, as
+    // the user many add/remove many columns quickly
+    if (this.props.selectedColumns.length !== prevProps.selectedColumns.length) {
+      this.animate = true
+    } else {
+      this.animate = false
+    }
+
+    if (this.props.selectedColumns !== prevProps.selectedColumns) {
       if (
-        this.props.selectedColumns.length !== nextProps.selectedColumns.length ||
-        !orderedIds.every((id, i) => id === nextProps.selectedColumns[i])
+        this.props.selectedColumns.length !== prevProps.selectedColumns.length ||
+        !orderedIds.every((id, i) => id === prevProps.selectedColumns[i])
       ) {
-        this.setState({
+        this.setState({ // eslint-disable-line react/no-did-update-set-state
           orderedIds: getColumnGroups(
-            nextProps.selectedColumns,
+            this.props.selectedColumns,
             columnMap,
             this.getWidth(),
             fixedWidth
@@ -478,9 +488,11 @@ class Galahad extends React.Component<Props, State> {
               const touchStartCb = this.handleTouchStart(column, runningX)
               const mouseDownCb = this.handleMouseDown(column, runningX)
 
+              const columnX = this.animate ? spring(runningX, springConfig) : runningX
+
               const style = {
                 selected: spring(isSelected ? 1 : 0, springConfig),
-                x: isSelected ? mouseXFromTable - mouseXFromColumn : spring(runningX, springConfig)
+                x: isSelected ? mouseXFromTable - mouseXFromColumn : columnX
               }
 
               runningX += width
