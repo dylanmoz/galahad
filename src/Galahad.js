@@ -93,9 +93,9 @@ class Galahad extends React.Component<Props, State> {
     // If a column has been added or removed, do not animate the columns to accomadate, as
     // the user many add/remove many columns quickly
     if (this.props.selectedColumns.length !== prevProps.selectedColumns.length) {
-      this.animate = true
-    } else {
       this.animate = false
+    } else {
+      this.animate = true
     }
 
     if (this.props.selectedColumns !== prevProps.selectedColumns) {
