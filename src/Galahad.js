@@ -51,16 +51,19 @@ class Galahad extends React.Component<Props, State> {
   table: ?HTMLDivElement
   scrollbars: any
   hoverTimeout: ?number
-  animate: boolean
+  prevSelectedColumns: Array<string>
+  columnsRecentlyChanged: boolean
+  columnsRecentlyChangedTimeout: any
 
   constructor(props: Props) {
     super(props)
 
-    const { selectedColumns, fixedWidth } = this.props
-    const columnMap = keyBy(this.props.columns, 'id')
+    const { columns, selectedColumns, fixedWidth } = this.props
+    const columnMap = keyBy(columns, 'id')
     const columnGroups = getColumnGroups(selectedColumns, columnMap, this.getWidth(), fixedWidth)
 
-    this.animate = true
+    this.columnsRecentlyChanged = false
+    this.prevSelectedColumns = selectedColumns
     this.state = {
       hoverRowIndex: null,
       selectedColumn: null,
@@ -80,32 +83,24 @@ class Galahad extends React.Component<Props, State> {
     window.addEventListener('mouseup', this.handleMouseUp)
   }
 
-  componentDidUpdate(prevProps) {
+  componentWillReceiveProps(nextProps) {
     const { columns, selectedColumns, fixedWidth } = this.props
     const { orderedIds } = this.state
 
     let { columnMap } = this.state
-    if (columns !== prevProps.columns) {
-      columnMap = keyBy(prevProps.columns, 'id')
+    if (columns !== nextProps.columns) {
+      columnMap = keyBy(nextProps.columns, 'id')
       this.setState({ columnMap }) // eslint-disable-line react/no-did-update-set-state
     }
 
-    // If a column has been added or removed, do not animate the columns to accomadate, as
-    // the user many add/remove many columns quickly
-    if (this.props.selectedColumns.length !== prevProps.selectedColumns.length) {
-      this.animate = false
-    } else {
-      this.animate = true
-    }
-
-    if (this.props.selectedColumns !== prevProps.selectedColumns) {
+    if (selectedColumns !== nextProps.selectedColumns) {
       if (
-        this.props.selectedColumns.length !== prevProps.selectedColumns.length ||
-        !orderedIds.every((id, i) => id === prevProps.selectedColumns[i])
+        selectedColumns.length !== nextProps.selectedColumns.length ||
+        !orderedIds.every((id, i) => id === nextProps.selectedColumns[i])
       ) {
         this.setState({ // eslint-disable-line react/no-did-update-set-state
           orderedIds: getColumnGroups(
-            this.props.selectedColumns,
+            nextProps.selectedColumns,
             columnMap,
             this.getWidth(),
             fixedWidth
@@ -130,6 +125,27 @@ class Galahad extends React.Component<Props, State> {
 
   setScrollbarsRef = (ref: ?Object) => {
     this.scrollbars = ref
+  }
+
+  /**
+   * Should call once during render. Will set this.prevSelectedColumns to the passed in selected
+   * columns so that next render has access to them
+   */
+  shouldAnimate = (selectedColumns: Array<string>) => {
+    const equalColumns = this.prevSelectedColumns.length === selectedColumns.length
+    const animate = equalColumns && !this.columnsRecentlyChanged
+    this.prevSelectedColumns = selectedColumns
+
+    if (!equalColumns) {
+      this.columnsRecentlyChanged = true
+
+      clearTimeout(this.columnsRecentlyChangedTimeout)
+      this.columnsRecentlyChangedTimeout = setTimeout(() => {
+        this.columnsRecentlyChanged = false
+      }, 1000)
+    }
+
+    return animate
   }
 
   isDraggable = (column: DataColumnDefinition) => {
@@ -456,6 +472,8 @@ class Galahad extends React.Component<Props, State> {
     const scrollWidth = this.getScrollWidth(orderedIds, columnMap, fixedWidth)
     const height = 42 + rowHeight * (loading ? numRows : data.length)
 
+    const animate = this.shouldAnimate(selectedColumns)
+
     return (
       <Scrollbars ref={this.setScrollbarsRef} style={{ width: '100%', height }}>
         <div
@@ -488,7 +506,7 @@ class Galahad extends React.Component<Props, State> {
               const touchStartCb = this.handleTouchStart(column, runningX)
               const mouseDownCb = this.handleMouseDown(column, runningX)
 
-              const columnX = this.animate ? spring(runningX, springConfig) : runningX
+              const columnX = animate ? spring(runningX, springConfig) : runningX
 
               const style = {
                 selected: spring(isSelected ? 1 : 0, springConfig),
